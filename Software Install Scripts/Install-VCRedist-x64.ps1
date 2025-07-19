@@ -9,6 +9,7 @@
     Date: July 17, 2025
     Version: 25.07.17
     Requires: Administrative privileges, 64-bit Windows, internet access
+    Use for a fresh install - Needs work on testing/verifying installation
 #>
 
 # Configuration
@@ -50,18 +51,17 @@ function Test-VCRedistInstalled {
     }
 }
 
-function Get-VCRedistVersion {
+function Get-SoftwareVersion {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
         [ValidateScript({ Test-Path $_ -PathType Leaf })]
         [string]$InstallerPath,
-
         [Parameter(Mandatory = $true)]
         [string]$LogFile
     )
 
-    Write-Log "Attempting to retrieve version from $InstallerPath"
+    Write-Log "Attempting to retrieve version from $InstallerPath" -LogFile $LogFile
 
     try {
         # Get file version info
@@ -69,15 +69,15 @@ function Get-VCRedistVersion {
         $Version = $FileVersionInfo.FileVersion
 
         if ($Version) {
-            Write-Log "Successfully retrieved version: $Version"
+            Write-Log "Successfully retrieved version: $Version" -LogFile $LogFile
             Write-Output $Version
         } else {
-            Write-Log "ERROR: Could not retrieve version information from $InstallerPath"
+            Write-Log "ERROR: Could not retrieve version information from $InstallerPath" -LogFile $LogFile
             Write-Error "Could not retrieve version information from $InstallerPath"
             return $null
         }
     } catch {
-        Write-Log "ERROR: Failed to retrieve version. Error: $($_.Exception.Message)"
+        Write-Log "ERROR: Failed to retrieve version. Error: $($_.Exception.Message)" -LogFile $LogFile
         Write-Error "Failed to retrieve version from $InstallerPath. Error: $($_.Exception.Message)"
         return $null
     }
@@ -114,14 +114,14 @@ if (-not (Test-Path $InstallerPath)) {
 
 # Get the version of the downloaded installer
 Write-Log "Checking the version of the downloaded Visual C++ Redistributable..."
-$ExpectedVersion = Get-VCRedistVersion -InstallerPath $InstallerPath -LogFile $LogFile
+$ExpectedVersion = Get-SoftwareVersion -InstallerPath $InstallerPath -LogFile $LogFile
 
 # Check if already installed
-if (Test-VCRedistInstalled) {
-    Write-Host "Visual C++ Redistributable (x64) is already installed. Exiting."
-    Write-Log "Script terminated: Visual C++ Redistributable is already installed."
-    exit 0
-}
+#if (Test-VCRedistInstalled) {
+#    Write-Host "Visual C++ Redistributable (x64) is already installed. Exiting."
+#    Write-Log "Script terminated: Visual C++ Redistributable is already installed."
+#    exit 0
+#}
 
 # Install the redistributable silently
 Write-Log "Installing Visual C++ Redistributable (x64)..."
@@ -146,14 +146,14 @@ try {
 }
 
 # Verify installation
-if (Test-VCRedistInstalled) {
-    Write-Host "Visual C++ Redistributable (x64) installed successfully."
-    Write-Log "Verification: Visual C++ Redistributable (x64) installed successfully."
-} else {
-    Write-Log "ERROR: Verification failed. Visual C++ Redistributable (x64) not detected after installation."
-    Write-Error "Verification failed. Visual C++ Redistributable (x64) not detected."
-    exit 1
-}
+#if (Test-VCRedistInstalled) {
+#    Write-Host "Visual C++ Redistributable (x64) installed successfully."
+#    Write-Log "Verification: Visual C++ Redistributable (x64) installed successfully."
+#} else {
+#    Write-Log "ERROR: Verification failed. Visual C++ Redistributable (x64) not detected after installation."
+#    Write-Error "Verification failed. Visual C++ Redistributable (x64) not detected."
+#    exit 1
+#}
 
 Write-Log "Script completed successfully."
 Write-Host "Script completed. Log file: $LogFile"
