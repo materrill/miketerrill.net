@@ -1,6 +1,17 @@
-# PowerShell script to import a root certificate into the Trusted Root Certification Authorities store
+<#
+.SYNOPSIS
+    PowerShell script to import the 2Pint 2PXE root certificate into the Trusted Root Certification Authorities store
+.DESCRIPTION
+    This script automates importing of the 2Pint 2PXE root certificate
+    It verifies the import, and handles common errors.
+.NOTES
+    Author: Mike Terrill/2Pint Software
+    Date: July 20, 2025
+    Version: 25.07.20
+    Requires: Administrative privileges, 64-bit Windows
+#>
 
-# Specify the path to the certificate file
+# Default 2Pint 2PXE path to the certificate file
 $certFilePath = "C:\Program Files\2Pint Software\2PXE\x64\ca.crt"
 
 # Check if the certificate file exists
