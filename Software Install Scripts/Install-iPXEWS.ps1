@@ -104,7 +104,7 @@ $arguments = @(
 # "LICENSETYPE=`"#3`""                               # Uncomment if a license key was entered 
 
 #Other MSIEXEC params
-    "/qb" #Quiet - with basic interface - for NO interface use /qn instead
+    "/qn" #Quiet - with basic interface - for NO interface use /qn instead
 
     "/norestart"
 
