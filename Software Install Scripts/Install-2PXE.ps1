@@ -100,7 +100,7 @@ $arguments = @(
 # "USEHYPERTHREAD=`"1`""                                   # Enabel Hyperthread
 
 #Other MSIEXEC params
-    "/qb" #Quiet - with basic interface - for NO interface use /qn instead
+    "/qn" #Quiet - with basic interface - for NO interface use /qn instead
 
     "/norestart"
 
@@ -108,7 +108,7 @@ $arguments = @(
 
 )
 
-#write-host $arguments #uncomment this line to see the command line
+write-host "Using the following install commands: $arguments" #uncomment this line to see the command line
 
 #Install the 2PXE Service
 start-process "msiexec.exe" -arg $arguments -Wait
