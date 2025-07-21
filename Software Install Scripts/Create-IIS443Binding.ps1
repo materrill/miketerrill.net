@@ -10,7 +10,7 @@
     Date: July 20, 2025
     Version: 25.07.20
     Requires: Administrative privileges, 64-bit Windows
-#># PowerShell script to add an HTTPS site binding in IIS and assign a certificate issued by 2PintSoftware.com
+#>
 
 # Ensure the script runs with elevated privileges
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
