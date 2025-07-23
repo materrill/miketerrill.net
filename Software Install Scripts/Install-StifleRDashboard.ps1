@@ -25,8 +25,8 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 # This will use the connection specific suffix for the fqdn - useful when system is not domain joined
 $domain = [string](Get-DnsClient | Select-Object -ExpandProperty ConnectionSpecificSuffix)
 $fqdn = "$($env:COMPUTERNAME.Trim()).$($domain.Trim())"
-$STIFLERSERVER = "https://$($fqdn):1414"
-$STIFLERLOCSERVER = "https://$($fqdn):9000"
+$STIFLERSERVER = "STIFLERSERVER=https://$($fqdn):1414"
+$STIFLERLOCSERVER = "STIFLERLOCSERVER=https://$($fqdn):9000"
 
 $arguments = "/i $msifile $STIFLERSERVER $STIFLERLOCSERVER /qn /norestart /l*v C:\Windows\Temp\StifleRDashboardInstall.log"
 
