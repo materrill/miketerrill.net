@@ -7,7 +7,7 @@
 .NOTES
     Author: Mike Terrill/2Pint Software
     Date: July 20, 2025
-    Version: 25.07.20
+    Version: 25.07.22
     Requires: Administrative privileges, 64-bit Windows
 #>
 
@@ -22,8 +22,7 @@ if (-not (Test-Path -Path $certFilePath)) {
 
 try {
     # Load the certificate
-    $certificate = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
-    $certificate.Import($certFilePath)
+    $certificate = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($certFilePath)
     
     # Display certificate details for verification
     Write-Host "Importing certificate: $($certificate.Subject)"
