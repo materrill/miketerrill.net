@@ -28,7 +28,7 @@ $fqdn = "$($env:COMPUTERNAME.Trim()).$($domain.Trim())"
 $STIFLERSERVER = "STIFLERSERVER=https://$($fqdn):1414"
 $STIFLERLOCSERVER = "STIFLERLOCSERVER=https://$($fqdn):9000"
 
-$arguments = "/i $msifile $STIFLERSERVER $STIFLERLOCSERVER /qn /norestart /l*v C:\Windows\Temp\StifleRDashboardInstall.log"
+$arguments = "/i `"$msifile`" $STIFLERSERVER $STIFLERLOCSERVER /qn /norestart /l*v C:\Windows\Temp\StifleRDashboardInstall.log"
 
 write-host "Using the following install commands: $arguments" #uncomment this line to see the command line
 
