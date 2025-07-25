@@ -1,5 +1,5 @@
 #Set the MIME types for the iPXE boot files, etc. 
-
+Import-Module WebAdministration
 #EFI loader files  
 add-webconfigurationproperty //staticContent -name collection -value @{fileExtension='.efi';mimeType='application/octet-stream'}  
 #BIOS boot loaders  
