@@ -1,0 +1,97 @@
+<#
+.SYNOPSIS
+    PowerShell script to detect the installation of an application
+.DESCRIPTION
+    This script will check an application name to see if it is already installed. It can use a partial name.
+    In addition, it can optionally check for version (if only one item is returned).
+    If using the name only and it finds one or more matches, $RunInstall is set to false.
+    If the name is not found, $RunInstall is set to true.
+    If using name and version, if the installed version is less than the target version, $RunInstall is set to true. 
+.NOTES
+    Author: Mike Terrill/2Pint Software
+    Date: July 27, 2025
+    Version: 25.07.27
+    Requires: Administrative privileges, 64-bit Windows
+#>
+
+$TargetAppName = "Microsoft Visual C++ 2015-2022 Redistributable (x64)" # Enter the app name or part of an app name here
+$TargetAppVersion = $null #"14.44.35211.0" Put version in quotes if looking for name and version
+$RunInstall = $null
+
+# Ensure the script runs with elevated privileges
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Error "This script requires administrative privileges. Please run PowerShell as Administrator."
+    exit 1
+}
+
+# Define registry paths to search
+$registryPaths = @(
+    "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*",
+    "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*",
+    "HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*",
+    "HKCU:\SOFTWARE\Wow6432Node\Microsoft\Active Setup\Uninstall\*"
+)
+
+# Function to search registry for application
+function Get-InstalledApplication {
+    param (
+        [string]$AppName,
+        [string[]]$RegPaths
+    )
+
+    $results = @()
+
+    foreach ($path in $RegPaths) {
+        try {
+            # Check if path exists
+            if (Test-Path $path) {
+                # Get all subkeys
+                $items = Get-ItemProperty -Path $path -ErrorAction SilentlyContinue | 
+                    Where-Object { $_.DisplayName -like "*$AppName*" }
+                
+                foreach ($item in $items) {
+                    if ($item.DisplayName) {
+                        $results += [PSCustomObject]@{
+                            DisplayName = $item.DisplayName
+                            DisplayVersion = $item.DisplayVersion
+                            RegistryPath = $path
+                        }
+                    }
+                }
+            }
+        }
+        catch {
+            Write-Warning "Error accessing registry path: $path - $_"
+        }
+    }
+
+    return $results
+}
+
+# Execute search
+$foundApps = Get-InstalledApplication -AppName $TargetAppName -RegPaths $registryPaths
+
+# Output results
+if ($foundApps) {
+    #Write-Host "Found applications matching '$TargetAppName':"
+    if ($null -ne $TargetAppVersion -and ($foundApps | Measure-Object).Count -eq 1) {
+        #Write-Host "Installed version is $($foundApps.DisplayVersion)"
+        #Write-Host "Looking for version $TargetAppVersion"
+        if ([version]$foundApps.DisplayVersion -lt [version]$TargetAppVersion) {
+            $RunInstall = $true
+        }
+        else {
+            $RunInstall = $false
+        }
+    }
+    else {
+        #$foundApps | Format-Table DisplayName, DisplayVersion, RegistryPath -AutoSize
+        $RunInstall = $false
+    }
+}
+else {
+    #Write-Host "No applications found matching '$TargetAppName'"
+    $RunInstall = $true
+}
+
+$RunInstall
