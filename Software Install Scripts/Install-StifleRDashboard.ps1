@@ -8,7 +8,7 @@
     directory for the dashboard.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: July 23, 2025
+    Date: August 4, 2025
     Version: 25.08.04
     Requires: Administrative privileges, 64-bit Windows
 #>
@@ -38,16 +38,6 @@ start-process "msiexec.exe" -arg $arguments -Wait
 # Create the StifleR Dashboard IIS Virtual Directory
 Import-Module WebAdministration
 New-WebVirtualDirectory -Site "Default Web Site" -Name "StifleRDashboard" -PhysicalPath 'C:\Program Files\2Pint Software\StifleR Dashboards\Dashboard Files'
-
-# Configure IIS for Authentication
-$partofdomain = (Get-CimInstance win32_computersystem).PartOfDomain
-$siteName = "Default Web Site/StifleRDashboard"
-
-Write-Host "Removing Anonymous Authentication from website."
-Set-WebConfigurationProperty -filter /system.webServer/security/authentication/AnonymousAuthentication -name enabled -value false -PSPath IIS:\ -location $siteName
-
-Write-Host "Configuring IIS for Windows Authentication."
-Set-WebConfigurationProperty -filter /system.webServer/security/authentication/WindowsAuthentication -name enabled -value True -PSPath IIS:\ -location $siteName
 
 # Accessing server locally with fqdn can cause authentication prompt loop on workgroup server
 if ($partofdomain -eq $false) {
