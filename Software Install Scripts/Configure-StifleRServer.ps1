@@ -7,8 +7,8 @@
     It verifies the import, and handles common errors.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: July 23, 2025
-    Version: 25.07.23
+    Date: August 4, 2025
+    Version: 25.08.04
     Requires: Administrative privileges, 64-bit Windows
 #>
 
@@ -165,22 +165,23 @@ if ($ReadAccess) {
 
 Write-Host "Registry entries created successfully."
 
-# Start the Stifler Server Service
+# Start the StifleR Server Service
+$serviceName = "StifleRServer"
 try {
     # Check if the Stifler Server service exists
-    $service = Get-Service -Name "StifleRServer" -ErrorAction SilentlyContinue
+    $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
     if (-not $service) {
-        Write-Host "The Stifler Server service was not found on this computer."
+        Write-Host "The $serviceName service was not found on this computer."
         exit 0
     }
 
     # Check the current status of the service
-    Write-Host "Current status of Stifler Server service: $($service.Status)"
+    Write-Host "Current status of $serviceName service: $($service.Status)"
 
     # Start the service if it is not running
     if ($service.Status -ne 'Running') {
-        Write-Host "Starting the Stifler Server service..."
-        Start-Service -Name "StifleRServer" -ErrorAction Stop
+        Write-Host "Starting the $serviceName service..."
+        Start-Service -Name $serviceName -ErrorAction Stop
         Write-Host "Service start command issued. Waiting for service to start..."
 
         # Wait for the service to start (up to 30 seconds)
@@ -189,16 +190,33 @@ try {
         # Verify the service status
         $service.Refresh()
         if ($service.Status -eq 'Running') {
-            Write-Host "Verification: Stifler Server service is now running."
+            Write-Host "Verification: $serviceName service is now running."
         } else {
-            Write-Warning "Verification: Stifler Server service is still in state: $($service.Status)"
+            Write-Warning "Verification: $serviceName service is still in state: $($service.Status)"
         }
     } else {
-        Write-Host "The Stifler Server service is already running."
+        Write-Host "The $serviceName service is already running."
+    }
+
+    # Set StifleR Server Service Startup Type to Automatic
+    if ($service.StartType -ne "Automatic") {
+        try {
+            Set-Service -Name $serviceName -StartupType Automatic -ErrorAction Stop
+            Write-Host "Startup type for '$serviceName' changed to Automatic."
+            $updatedService = Get-Service -Name $serviceName
+            Write-Host "Verified new startup type: $($updatedService.StartType)"
+            } 
+        catch {
+            Write-Host "Failed to set startup type for $serviceName to Automatic"
+            exit 1
+        }
+    } 
+    else {
+        Write-Host "Startup type for $serviceName is already Automatic. No action taken."
     }
 }
 catch {
-    Write-Error "An error occurred while attempting to start the Stifler Server service: $_"
+    Write-Host "An error occurred while attempting to start and configure the $serviceName service"
     exit 1
 }
 
