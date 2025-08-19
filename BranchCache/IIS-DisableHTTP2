@@ -36,13 +36,13 @@ $binding = $site.bindings.binding | Where-Object { $_.protocol -eq "https" -and 
 
 if ($binding) {
     # Get the current sslFlags value (default to 0 if not set)
-    $currentSslFlags = [int]($binding.sslFlags ?? "0")
+    $currentSslFlags = if ($null -eq $binding.sslFlags) { 0 } else { [int]$binding.sslFlags }
 
     # Add 4 to disable HTTP/2 (bitwise OR equivalent)
     $newSslFlags = $currentSslFlags -bor 4
 
     # Set the updated sslFlags value
-    $binding.sslFlags = $newSslFlags
+    $binding.sslFlags = $newSslFlags.ToString()
 
     # Save the modified configuration
     $config.Save($configPath)
