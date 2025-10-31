@@ -16,8 +16,8 @@ param(
     $TargetNetwork
 )
 
-$2pxeserver = 'https://2pint.2pintdemo.net/Remoteinstall/Boot/'
-$deployrserver = 'https://2pint.2pintdemo.net:7281/Content/Boot/'
+$2pxeserver = 'https://server.company.com/Remoteinstall/Boot/'
+$deployrserver = 'https://server.company.com:7281/Content/Boot/'
 
 $menu = @"
 #!ipxe
