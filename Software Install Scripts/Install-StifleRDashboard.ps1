@@ -8,9 +8,13 @@
     directory for the dashboard.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: August 4, 2025
-    Version: 25.08.04
+    Date: January 6, 2026
+    Version: 26.01.06
     Requires: Administrative privileges, 64-bit Windows
+
+    Version history:
+    26.01.06: Fixed the domain check
+    25.08.04: Initial release
 #>
 
 # Set path to MSI file
@@ -40,6 +44,7 @@ Import-Module WebAdministration
 New-WebVirtualDirectory -Site "Default Web Site" -Name "StifleRDashboard" -PhysicalPath 'C:\Program Files\2Pint Software\StifleR Dashboards\Dashboard Files'
 
 # Accessing server locally with fqdn can cause authentication prompt loop on workgroup server
+$partofdomain = (Get-CimInstance -ClassName Win32_ComputerSystem).PartOfDomain
 if ($partofdomain -eq $false) {
     Write-Host "Server is not member of a domain. Configuring BackConnectionHostNames."
     $multiStringData = @("$fqdn")
