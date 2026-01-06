@@ -6,15 +6,21 @@
     It configures a basic instance with default settings and logs the process for troubleshooting.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: August 4, 2025
-    Version: 25.08.04
+    Date: January 6, 2026
+    Version: 26.01.06
     Requires: Administrative privileges, 64-bit Windows, internet access
+
+CHANGELOG
+    26.01.06 - Removed creation of local install account (didn't work)
+    25.10.28 - Added creation of local install account when running as SYSTEM
+               Fixed the elevated privileges check
+    25.08.04 - Initial version
 #>
 
 # Configuration
 $DownloadUrl = "https://go.microsoft.com/fwlink/?linkid=2215160"  # Official Microsoft URL for SQL Server 2022 Express
-$InstallerPath = "$env:TEMP\SQL2022-SSEI-Expr.exe"  # Temporary location for the installer
-$LogFile = "$env:TEMP\SQL_Express_Install_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
+$InstallerPath = "C:\Windows\Temp\SQL2022-SSEI-Expr.exe"  # Temporary location for the installer
+$LogFile = "C:\Windows\Temp\SQL_Express_Install_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
 $InstanceName = "SQLEXPRESS"  # Default instance name
 
 # Function to write to log file
@@ -27,13 +33,6 @@ function Write-Log {
     )
     $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
     "$Timestamp - $Message" | Out-File -FilePath $LogFile -Append
-}
-
-# Function to check if the script is running as administrator
-function Test-Admin {
-    $CurrentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $Principal = New-Object Security.Principal.WindowsPrincipal($CurrentUser)
-    return $Principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
 function New-SQLExpressConfigFile {
@@ -232,9 +231,10 @@ function Test-SQLExpressInstalled {
 Write-Log -Message "Starting SQL Server 2022 Express installation script." -LogFile $LogFile
 
 # Check for administrative privileges
-if (-not (Test-Admin)) {
+# Ensure the script runs with elevated privileges
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Log -Message "ERROR: Script must be run as an administrator." -LogFile $LogFile
-    Write-Error "This script requires administrative privileges. Please run PowerShell as an administrator."
+    Write-Error "This script requires administrative privileges. Please run PowerShell as Administrator."
     exit 1
 }
 
@@ -288,20 +288,14 @@ if ($Result) {
 # Install SQL Server Express silently
 Write-Log -Message "Installing SQL Server 2022 Express..." -LogFile $LogFile
 try {
-    $Arguments = "/IAcceptSqlServerLicenseTerms /Quiet /HideProgressBar /Action=Install /Language=en-US /ConfigurationFile=C:\Windows\Temp\SQLExpress\Configuration.ini /MediaPath=C:\Windows\Temp\SQLExpress"
+    $Arguments = "/IAcceptSqlServerLicenseTerms /Quiet /Action=Install /ConfigurationFile=C:\Windows\Temp\SQLExpress\Configuration.ini"
+    Write-Log "Running the following install command: " -LogFile $LogFile
+
+    Write-Log "$InstallerPath $Arguments" -LogFile $LogFile
     $Process = Start-Process -FilePath $InstallerPath -ArgumentList $Arguments -Wait -PassThru -ErrorAction Stop
+
     Write-Log -Message "Installation exit code: $($Process.ExitCode)" -LogFile $LogFile
-    
-    if ($Process.ExitCode -eq 0) {
-        Write-Log -Message "Installation completed successfully." -LogFile $LogFile
-    } elseif ($Process.ExitCode -eq 3010) {
-        Write-Log -Message "Installation completed successfully, but a reboot is required." -LogFile $LogFile
-        Write-Host "Installation completed successfully, but a reboot is required."
-    } else {
-        Write-Log -Message "ERROR: Installation failed with exit code $($Process.ExitCode). Check logs in C:\Program Files\Microsoft SQL Server\160\Setup Bootstrap\Log" -LogFile $LogFile
-        Write-Error "Installation failed with exit code $($Process.ExitCode). Check logs in C:\Program Files\Microsoft SQL Server\160\Setup Bootstrap\Log"
-        exit $Process.ExitCode
-    }
+
 } catch {
     Write-Log -Message "ERROR: Installation process failed. Error: $($_.Exception.Message)" -LogFile $LogFile
     Write-Error "Installation process failed. Error: $($_.Exception.Message)"
