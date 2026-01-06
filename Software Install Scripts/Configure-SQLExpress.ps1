@@ -5,14 +5,18 @@
     This script grants permissions to NT AUTHORITY/SYSTEM and configures the firewall rules.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: August 4, 2025
-    Version: 25.08.04
+    Date: January 6, 2026
+    Version: 26.01.06
     Requires: Administrative privileges, 64-bit Windows, internet access
+
+    Version history:
+    26.01.06: Fixed the elevated privilege check
+    25.08.04: Initial release
 #>
 
-# Check for administrative privileges
-if (-not (Test-Admin)) {
-    Write-Error "This script requires administrative privileges. Please run PowerShell as an administrator."
+# Ensure the script runs with elevated privileges
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Error "This script requires administrative privileges. Please run PowerShell as Administrator."
     exit 1
 }
 
