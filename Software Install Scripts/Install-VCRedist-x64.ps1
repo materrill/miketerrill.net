@@ -6,14 +6,20 @@
     It verifies the installation, logs the process, and handles common errors.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: July 17, 2025
-    Version: 25.07.17
+    Date: January 27, 2026
+    Version: 26.01.27
     Requires: Administrative privileges, 64-bit Windows, internet access
     Use for a fresh install - Needs work on testing/verifying installation
+
+    Version history:
+    26.01.27: Updated to the new download link
+    25.07.17: Initial release
 #>
 
 # Configuration
-$DownloadUrl = "https://aka.ms/vs/17/release/vc_redist.x64.exe"  # Official Microsoft URL for Visual C++ 2015-2022 x64
+# Configuration
+#$DownloadUrl = "https://aka.ms/vs/17/release/vc_redist.x64.exe"  # Official Microsoft URL for Visual C++ 2015-2022 x64
+$DownloadUrl = "https://aka.ms/vc14/vc_redist.x64.exe"  # Official Microsoft URL for Visual C++ 14 x64
 $InstallerPath = "$env:TEMP\vc_redist.x64.exe"  # Temporary location for the installer
 $LogFile = "$env:TEMP\VC_Redist_Install_$(Get-Date -Format 'yyyyMMdd_HHmmss').log"
 
