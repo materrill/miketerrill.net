@@ -76,7 +76,7 @@ QUIETSIMPLE="False"
 UpdateEnabled="False"
 
 ; If this parameter is provided, then this computer will use Microsoft Update to check for updates. 
-USEMICROSOFTUPDATE="False"
+USEMICROSOFTUPDATE="True"
 
 ; Specifies that SQL Server Setup should not display the paid edition notice when ran from the command line. 
 SUPPRESSPAIDEDITIONNOTICE="False"
