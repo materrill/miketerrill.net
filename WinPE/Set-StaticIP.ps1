@@ -7,7 +7,7 @@
     Include the script in the boot image and call it with the following command
     in WinPEShl.ini:
     [LaunchApps]
-    powershell.exe -executionpolicy bypass x:\Set-StaticIP.ps1
+    powershell.exe -executionpolicy bypass -file x:\Set-StaticIP.ps1
 
 .NOTES
     Author: Mike Terrill/2Pint Software
@@ -32,8 +32,8 @@ $AdapterConfigs = @{
         DNS          = @("10.10.10.1")  # Array: primary first, optional secondary
     }
 	# 2PINT
-	"00-15-5D-10-10-11" = @{
-        IPAddress    = "10.10.10.11"
+	"00-15-5D-10-10-20" = @{
+        IPAddress    = "10.10.10.20"
         SubnetMask   = "255.255.255.0"
         Gateway      = "10.10.10.1"
         DNS          = @("10.10.10.10")  # Array: primary first, optional secondary
