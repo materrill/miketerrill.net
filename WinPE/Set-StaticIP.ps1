@@ -7,7 +7,7 @@
     Include the script in the boot image and call it with the following command
     in WinPEShl.ini:
     [LaunchApps]
-    powershell.exe -executionpolicy bypass -file x:\Set-StaticIP.ps1
+    powershell.exe,-executionpolicy bypass -file x:\Set-StaticIP.ps1
 
 .NOTES
     Author: Mike Terrill/2Pint Software
@@ -19,7 +19,7 @@
     25.12.27: Initial release
 
 .EXAMPLE
-    .\Set-StaticIP.ps1
+    powershell.exe -executionpolicy bypass -file x:\Set-StaticIP.ps1
 #>
 
 # Hashtable: MAC Address -> Configuration
