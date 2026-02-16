@@ -50,6 +50,12 @@ function Normalize-Mac {
     return ($Mac -replace '[:.-]', '').ToUpper()
 }
 
+Start-Transcript -Path "x:\_2P\logs\Set-StaticIP.log" -Force
+
+Write-Host "Initializing network..." -ForegroundColor Cyan
+$Process = Start-Process -FilePath "x:\Windows\System32\wpeutil.exe" -ArgumentList "InitializeNetwork" -Wait -PassThru
+Write-Host "Initializing network exit code: $($Process.ExitCode)" -ForegroundColor Cyan
+
 Write-Host "Starting network configuration..." -ForegroundColor Cyan
 
 foreach ($InputMac in $AdapterConfigs.Keys) {
