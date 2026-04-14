@@ -203,12 +203,14 @@ try {
         Write-Host "Hash verification passed ($algorithm)." -ForegroundColor Green
     }
 
+    $tsenv:ServerISO = $Destination
+    Write-Host "Setting tsenv:ServerISO to $($tsenv:ServerISO)"
+    
     return [PSCustomObject]@{
         Success   = $true
         FilePath  = $Destination
-        $tsenv:isodownload = $Destination
         Message   = "Downloaded successfully"
-        Method    = if ($bitsJob -and $bitsJob.JobState -eq 'Transferred') { "BITS" } else { "Invoke-WebRequest" }
+        Method    = if ($fileExists) { "Previously Downloaded" } elseif ($bitsJob -and $bitsJob.JobState -eq 'Transferred') { "BITS" } else { "Invoke-WebRequest" }
     }
 }
 catch {
