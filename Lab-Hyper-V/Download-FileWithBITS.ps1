@@ -89,6 +89,8 @@ try {
         if ($actualHash -eq $hashValue) {
             $hashMatches = $true
             Write-Host "File already exists and hash matches ($algorithm). Skipping download." -ForegroundColor Green
+            $tsenv:ServerISO = $Destination
+            Write-Host "Setting tsenv:ServerISO to $($tsenv:ServerISO)" -ForegroundColor Green
             return [PSCustomObject]@{
                 Success   = $true
                 FilePath  = $Destination
@@ -210,7 +212,7 @@ try {
         Success   = $true
         FilePath  = $Destination
         Message   = "Downloaded successfully"
-        Method    = if ($fileExists) { "Previously Downloaded" } elseif ($bitsJob -and $bitsJob.JobState -eq 'Transferred') { "BITS" } else { "Invoke-WebRequest" }
+        Method    = if ($bitsJob -and $bitsJob.JobState -eq 'Transferred') { "BITS" } else { "Invoke-WebRequest" }
     }
 }
 catch {
