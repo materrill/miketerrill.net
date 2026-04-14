@@ -106,7 +106,7 @@ try {
     }
     elseif ($fileExists) {
         Write-Host "File already exists at $Destination." -ForegroundColor Yellow
-        $overwrite = Read-Host "Overwrite? (Y/N) [Default: N]"
+        $overwrite = "Y" #Read-Host "Overwrite? (Y/N) [Default: N]"
         if ($overwrite -notmatch '^Y$') {
             Write-Host "Download cancelled by user." -ForegroundColor Yellow
             return [PSCustomObject]@{
