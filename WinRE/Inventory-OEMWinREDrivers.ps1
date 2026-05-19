@@ -16,10 +16,11 @@
 .NOTES
     AUTHOR: Mike Terrill/2Pint Software
     CONTACT: @miketerrill
-    VERSION: 26.05.16
+    VERSION: 26.05.18
 .CHANGELOG
     26.05.15 : Initial version
     26.05.16 : Added JSON export to user's Downloads folder with specified format
+    26.05.18 : Changed the exporting of drivers from pnputil to dism (pnputil was not capturing all of the drivers in some cases)
 #>
 
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
@@ -333,44 +334,21 @@ if ($CreateWinREDriverPack) {
     # Check if any drivers were found
     if ($DriverTable.Count -eq 0) {
         Write-Log -Message "No drivers found for the specified INF files...exiting script." 
-        exit
+        break
     }
 
-    # Export the newest drivers
-    foreach ($InfName in $DriverTable.Keys) {
-        $Driver = $DriverTable[$InfName]
-        $DriverVersion = $Driver.Version
-        $DriverInf = $InfName
-        $ProviderName = $Driver.ProviderName
-        $DriverOemInf = $Driver.Driver  # Use Driver property (OEM INF name, e.g., oemXX.inf)
-
-        # Extract subdirectory name from OriginalFileName
-        $OriginalFileName = $Driver.OriginalFileName
-        $SubDirName = [System.IO.Path]::GetFileName([System.IO.Path]::GetDirectoryName($OriginalFileName))
-        $ExportSubDir = Join-Path -Path $WinREDriverPack -ChildPath $SubDirName
-
-        # Create subdirectory for this driver
-        if (-not (Test-Path -Path $ExportSubDir)) {
-            New-Item -ItemType Directory -Path $ExportSubDir -Force | Out-Null
+    # Export drivers using dism
+    try {
+        $ExportDrivers = "dism /image:$WinREMount /export-driver /destination:`"$WinREDriverPack`""
+        $Result = Invoke-Expression $ExportDrivers 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Log -Message "Failed to export drivers to $WinREDriverPack. Error: $Result" -ErrorMessage "ERROR"
+        } else {
+            Write-Log -Message "Successfully exported drivers to $WinREDriverPack" 
         }
-
-        Write-Log -Message "Exporting driver: $ProviderName (INF: $DriverInf, Version: $DriverVersion, OEM INF: $DriverOemInf, Subdirectory: $SubDirName)" 
-
-        # Use pnputil to export the driver using the Driver property
-        try {
-            $PnPUtilCommand = "pnputil.exe /export-driver $DriverOemInf `"$ExportSubDir`""
-            $Result = Invoke-Expression $PnPUtilCommand 2>&1
-            if ($LASTEXITCODE -ne 0) {
-                Write-Log -Message "Failed to export driver $DriverOemInf to $ExportSubDir. Error: $Result" -ErrorMessage "ERROR"
-                # Clean up empty directory
-                Remove-Item $ExportSubDir -Force -Verbose -Recurse | Out-Null
-            } else {
-                Write-Log -Message "Successfully exported $DriverOemInf to $ExportSubDir" 
-            }
-        } catch {
-            Write-Log -Message "Error exporting driver $DriverOemInf to $ExportSubDir : $_"
-        }
-    }
+    } catch {
+        Write-Log -Message "Error exporting drivers to $WinREDriverPack : $_"
+    } 
 
     # Driver Export Finish
     Write-Log -Message "Driver export completed."
