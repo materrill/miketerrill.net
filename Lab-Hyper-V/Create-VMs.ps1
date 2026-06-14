@@ -9,11 +9,12 @@
 
 .NOTES
     Author: Mike Terrill / 2Pint Software
-    Date: February 10, 2026
-    Version: 26.02.10
+    Date: June 13, 2026
+    Version: 26.06.13
     Requires: Administrative privileges, 64-bit Windows
 
     Version history:
+    26.06.13: Removed Hyper-V Configuration Version
     26.02.10: Initial release (based on Create-VMsFromCSV.ps1)
 
 .EXAMPLE
@@ -32,7 +33,6 @@ $VMConfigs = @(
     @{
         VMPath              = "D:\Hyper-V"
         VMName              = "DC"
-        ConfigVersion       = "10.0"
         SecureBoot          = "True"
         TPM                 = "False"
         Memory              = "4"
@@ -51,7 +51,6 @@ $VMConfigs = @(
     @{
         VMPath              = "D:\Hyper-V"
         VMName              = "DEPLOYR"
-        ConfigVersion       = "10.0"
         SecureBoot          = "True"
         TPM                 = "False"
         Memory              = "6"
@@ -70,7 +69,6 @@ $VMConfigs = @(
     @{
         VMPath              = "D:\Hyper-V"
         VMName              = "PC01"
-        ConfigVersion       = "10.0"
         SecureBoot          = "False"
         TPM                 = "False"
         Memory              = "4"
@@ -89,7 +87,6 @@ $VMConfigs = @(
     @{
         VMPath              = "D:\Hyper-V"
         VMName              = "PC02"
-        ConfigVersion       = "10.0"
         SecureBoot          = "False"
         TPM                 = "False"
         Memory              = "4"
@@ -108,7 +105,6 @@ $VMConfigs = @(
     @{
         VMPath              = "D:\Hyper-V"
         VMName              = "PC03"
-        ConfigVersion       = "10.0"
         SecureBoot          = "False"
         TPM                 = "False"
         Memory              = "4"
@@ -222,14 +218,6 @@ foreach ($config in $VMConfigs) {
         } elseif ($rawMac) {
             Write-Log "Invalid MAC address format '$rawMac' for VM '$vmName'. Using dynamic MAC." "WARN"
         }       
-        
-        # VM Configuration Version
-        $versionStr = if ($config.ConfigVersion) { $config.ConfigVersion.Trim() } else { "10.0" }
-        try { $configVersion = [version]$versionStr }
-        catch {
-            Write-Log "Invalid ConfigVersion '$versionStr'. Using 10.0" "WARN"
-            $configVersion = [version]"10.0"
-        }
     }
     catch {
         Write-Log "Data parsing failed for VM '$vmName': $($_.Exception.Message)" "ERROR"
@@ -273,7 +261,6 @@ foreach ($config in $VMConfigs) {
         New-VM -Name $vmName `
                -Path $basePath `
                -Generation 2 `
-               -Version $configVersion `
                -MemoryStartupBytes ($memoryGB * 1GB) `
                -NoVHD `
                -SwitchName $vmSwitch `
