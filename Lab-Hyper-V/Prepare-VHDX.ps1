@@ -10,10 +10,12 @@
 .NOTES
     Author: Mike Terrill / 2Pint Software
     Date: June 12, 2026
-    Version: 26.06.12
+    Version: 26.06.17
     Requires: Administrative privileges, 64-bit Windows
 
     Version history:
+    26.06.17: Removed the functions and section for modifying the desktop image
+    26.06.13: Added the functions and section for modifying the desktop image
     26.06.12: Added copying and modifying the matching unattend file
               Added copying of the DeployR ISO contents and the DeployR-BuildLabKit.ps1 to the root of the VHDX Windows drive
     26.06.10: Added a TS variable (OfflineWindows) for the offline Windows drive letter and a parameter for unmounting and applying WIM
@@ -202,14 +204,6 @@ if ($ApplyWIM) {
     Write-Host "Copying DeployR-BuildLabKit.ps1 to $($windowsPartition.DriveLetter):\"
     Copy-Item -Path $scriptPath -Destination "$($windowsPartition.DriveLetter):\" -Force
 
-    # Set lock screen image
-    $imagePath = Join-Path $scriptRoot "2pint-desktop-stripes-dark-1920x1080.png"
-    if (Test-Path $imagePath) {
-        Write-Output "Running Command: Copy-Item $imagePath $($windowsPartition.DriveLetter):\windows\web\Screen\img100.jpg -Force -Verbose"
-        Copy-Item -Path $imagePath -Destination "$($windowsPartition.DriveLetter):\windows\web\Screen\img100.jpg" -Force -Verbose
-        Write-Output "Running Command: Copy-Item $imagePath $($windowsPartition.DriveLetter):\windows\web\Screen\img105.jpg -Force -Verbose"
-        Copy-Item -Path $imagePath -Destination "$($windowsPartition.DriveLetter):\windows\web\Screen\img105.jpg" -Force -Verbose
-    }
 }
 
 # Create 2Pint_Downloads directory on the Windows drive
