@@ -4,11 +4,11 @@
 
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: June 16, 2026
-    Version: 26.06.16
+    Date: June 17, 2026
+    Version: 26.06.17
 
     Version history:
-    26.06.16: Initial release
+    26.06.17: Initial release
     
 .PARAMETER ISO
     Path to the ISO to copy
@@ -35,10 +35,11 @@ if (-not (Test-Path $ISO)) {
 
 # If this is an ISO, mount it and set the path to the WIM
 if ((Split-Path $ISO -Extension) -ieq ".iso") {
+    $ISO = (Get-Item -Path $ISO).FullName
     Write-Host "Mounting ISO: $ISO" -ForegroundColor Cyan
     
     $MountISO = Mount-DiskImage -ImagePath $ISO -PassThru -Access ReadOnly
-    $driveLetter = ($MountISO | Get-Volume).DriveLetter 
+    $DriveLetter = ($MountISO | Get-Volume).DriveLetter 
 }
 
 Write-Host "Destination: $Destination" -ForegroundColor Cyan
@@ -52,8 +53,8 @@ if (-not (Test-Path $Destination)) {
 }
 
 # Copy contents to the destination
-Write-Host "Copying contents from $driveLetter to $Destination" -ForegroundColor Cyan
-Copy-Item -Path $driveletter -Destination $Destination -Recurse -Force -Verbose
+Write-Host "Copying contents from $($DriveLetter):\ to $($Destination)\" -ForegroundColor Cyan
+Copy-Item -Path "$($DriveLetter):\*" -Destination "$($Destination)\" -Recurse -Force -Verbose
 
 # Unmount the ISO if it was mounted
 if ((Split-Path $ISO -Extension) -ieq ".iso") {
