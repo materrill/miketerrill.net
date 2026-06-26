@@ -16,11 +16,12 @@
 .NOTES
     AUTHOR: Mike Terrill/2Pint Software
     CONTACT: @miketerrill
-    VERSION: 26.05.18
+    VERSION: 26.06.26
 .CHANGELOG
     26.05.15 : Initial version
     26.05.16 : Added JSON export to user's Downloads folder with specified format
     26.05.18 : Changed the exporting of drivers from pnputil to dism (pnputil was not capturing all of the drivers in some cases)
+    26.06.26 : Change the MakeAlias of 'Panasonic Corporation' to 'Panasonic'
 #>
 
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
@@ -175,7 +176,7 @@ Switch -Wildcard ($LocalInfo['Make']) {
         $LocalInfo['SystemAlias'] = "$($LocalInfo['SystemAlias'].SubString(0, $LocalInfo['SystemAlias'].IndexOf("i")))".Trim()
     }
     "*Panasonic*" {
-        $LocalInfo['MakeAlias'] = "Panasonic Corporation"
+        $LocalInfo['MakeAlias'] = "Panasonic"
         $LocalInfo['ModelAlias'] = "$(Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Model)".Trim()
         $LocalInfo['SystemAlias'] = "$((Get-CimInstance -ClassName MS_SystemInformation -NameSpace root\wmi ).BaseBoardProduct)".Trim()
     }
