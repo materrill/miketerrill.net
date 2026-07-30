@@ -12,6 +12,7 @@
     Requires: Administrative privileges, 64-bit Windows
 
     Version history:
+    26.07.30: Removed the firewall rules creation (this is done by the service). Added SqlConnectionBy registry value.
     25.11.05: Added the creation of firewall rules and bypass for authentication
     25.07.23: Initial release
 #>
@@ -158,6 +159,7 @@ Set-ItemProperty -Path $regPath -Name "StifleRServerApiUrl" -Value "$StifleRServ
 Set-ItemProperty -Path $regPath -Name "BypassAuthentication" -Value "True" -Type String
 Set-ItemProperty -Path $regPath -Name "BypassLocalAuthentication" -Value "True" -Type String
 Set-ItemProperty -Path $regPath -Name "ClientPasscode" -Value "P@ssw0rd" -Type String
+Set-ItemProperty -Path $regPath -Name "SqlConnectionBy" -Value "ServerInstanceAndDB" -Type String
 
 # Set optional registry values
 if ($ContentLocation) {
@@ -165,12 +167,6 @@ if ($ContentLocation) {
 }
 
 Write-Host "Registry entries created successfully."
-
-# Create Firewall rules 7281 (HTTPS) & 7282 (HTTP)
-New-NetFirewallRule -DisplayName "2Pint DeployR HTTPS 7281" -Direction Inbound -LocalPort 7281 -Protocol TCP -Action Allow
-New-NetFirewallRule -DisplayName "2Pint DeployR HTTP 7282" -Direction Inbound -LocalPort 7282  -Protocol TCP -Action Allow
-
-Write-Host "Created firewall rules."
 
 # Start the DeployR Service
 try {
