@@ -26,7 +26,6 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 # Example: Construct FQDN dynamically using computer name and domain suffix - useful when system is not domain joined
 $domain = [string](Get-DnsClient | Select-Object -ExpandProperty ConnectionSpecificSuffix)
 $fqdn = "$($env:COMPUTERNAME.Trim()).$($domain.Trim())" # Or set a static value, e.g., "2PINT.corp.viamonstra.com"
-$match = $false
 
 # Required Settings
 $ConnectionString = "Server=.\SQLEXPRESS;Database=DeployR;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
@@ -86,7 +85,6 @@ try {
                     Write-Host "  - FQDN: $SANfqdn"
                     Write-Host "  - Thumbprint: $Thumbprint"
                     if ($SANfqdn -eq $fqdn) {
-                        $match = $true
                         $Thumbprint = $cert.Thumbprint
                     }
                 }
