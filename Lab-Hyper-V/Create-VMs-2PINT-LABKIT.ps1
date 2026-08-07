@@ -82,7 +82,7 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 }
 
 Write-Log "Importing Hyper-V PowerShell module."
-Import-Module -Name Hyper-V -AllowClobber -Force
+Import-Module -Name Hyper-V -Force
 
 
 Write-Log "Using embedded configuration - $($VMConfigs.Count) VMs defined."
