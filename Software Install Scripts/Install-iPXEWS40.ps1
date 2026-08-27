@@ -13,14 +13,27 @@
 
     Version history:
     26.08.26: Initial release
-    26.08.27: Added preflight check for Scripts directory and fixed the double \\ in the AdvancedConnectionString registry value.
+    26.08.27: Added preflight check for Scripts directory, fixed the double \\ in the AdvancedConnectionString registry value,
+              and added the option for an external FQDN.
 #>
+
+# Add your license key and uncomment the line below to use it and automate the install. 
+# $LicenseKey = "YOUR_LICENSE_KEY_HERE"
+# If using an external FQDN for the iPXEWS, set it here and uncomment the line below. If not set, the script will use the local FQDN.
+# $ExternalFQDN = "server.company.com"
 
 Write-Host "Starting iPXEWS 4.0 installation and configuration..." -ForegroundColor Cyan
 
 # Ensure the script runs with elevated privileges
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Error "This script requires administrative privileges. Please run PowerShell as Administrator."
+    exit 1
+}
+
+# Preflight check: ensure the MSI exists before continuing.
+$msifile = "$PSScriptRoot\TwoPint.iPXEAnywhere.WebService.Installer64.msi"
+if (-not (Test-Path -Path $msiFile -PathType Leaf)) {
+    Write-Error "MSI file not found: $msiFile"
     exit 1
 }
 
@@ -57,13 +70,14 @@ function Get-LocalFqdn {
     return $hostName
 }
 
-# Configuration 
-# Add your license key and uncomment the line below to use it and automate the install. 
-# $LicenseKey = "YOUR_LICENSE_KEY_HERE"
-# Set path to MSI file
-$msifile = "$PSScriptRoot\TwoPint.iPXEAnywhere.WebService.Installer64.msi"
-$fqdn = Get-LocalFqdn
+if ((Get-Variable -Name ExternalFQDN -ErrorAction SilentlyContinue) -and -not [string]::IsNullOrWhiteSpace($ExternalFQDN)) {
+    $fqdn = $ExternalFQDN.Trim()
+}
+else {
+    $fqdn = Get-LocalFqdn
+}
 
+# Configuration
 $arguments = @(
 #Mandatory msiexec Arguments
 
@@ -99,6 +113,10 @@ Write-Host "Setting AdvancedConnectionString = $AdvancedConnectionString"
 Set-ItemProperty -Path $regPath -Name "AdvancedConnectionString" -Value $AdvancedConnectionString -Type String
 Write-Host "Setting StifleRServerApiUrl = $StifleRServerApiUrl"
 Set-ItemProperty -Path $regPath -Name "StifleRServerApiUrl" -Value $StifleRServerApiUrl -Type String
+if ((Get-Variable -Name ExternalFQDN -ErrorAction SilentlyContinue) -and -not [string]::IsNullOrWhiteSpace($ExternalFQDN)) {
+    Write-Host "Setting ExternalFQDNOverride = $($ExternalFQDN.Trim())"
+    Set-ItemProperty -Path $regPath -Name "ExternalFQDNOverride" -Value $ExternalFQDN.Trim() -Type String
+}
 if ((Get-Variable -Name LicenseKey -ErrorAction SilentlyContinue) -and -not [string]::IsNullOrWhiteSpace($LicenseKey)) {
     Write-Host "Setting LicenseKey = $($LicenseKey.Trim())"
     Set-ItemProperty -Path $regPath -Name "LicenseKey" -Value $LicenseKey.Trim() -Type String
