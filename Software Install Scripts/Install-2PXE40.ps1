@@ -22,14 +22,38 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
     exit 1
 }
 
+# Function to get the local FQDN by Johan
+function Get-LocalFqdn {
+    $hostName = $env:COMPUTERNAME
+
+    # 1. Real DNS lookup, if it returns something qualified
+    try {
+        $name = [System.Net.Dns]::GetHostEntry($hostName).HostName
+        if ($name -like '*.*') { return $name }
+    } catch { }
+
+    # 2. Primary DNS suffix, then the DHCP-supplied one (this is the Azure case)
+    $tcpip = 'HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters'
+    foreach ($value in 'Domain', 'DhcpDomain') {
+        $suffix = (Get-ItemProperty -Path $tcpip -Name $value -ErrorAction SilentlyContinue).$value
+        if ($suffix) { return '{0}.{1}' -f $hostName, $suffix }
+    }
+
+    # 3. Connection-specific suffix from a connected adapter
+    $suffix = Get-DnsClient -ErrorAction SilentlyContinue |
+              Where-Object { $_.ConnectionSpecificSuffix } |
+              Select-Object -First 1 -ExpandProperty ConnectionSpecificSuffix
+    if ($suffix) { return '{0}.{1}' -f $hostName, $suffix }
+
+    return $hostName
+}
+
 # Configuration 
 # Add your license key and uncomment the line below to use it and automate the install. 
 # $LicenseKey = "YOUR_LICENSE_KEY_HERE"
 # Set path to MSI file
 $msifile = "$PSScriptRoot\TwoPint.TwoPxe.Installer.msi"
-# This will use the connection specific suffix for the fqdn - useful when system is not domain joined
-$domain = [string](Get-DnsClient | Select-Object -ExpandProperty ConnectionSpecificSuffix)
-$fqdn = [System.Net.Dns]::GetHostEntry($env:COMPUTERNAME).HostName
+$fqdn = Get-LocalFqdn
 # Grabs the IPv4 address - used for teh BINDTOIP property
 $IPv4 = Get-CimInstance -ClassName Win32_NetworkAdapterConfiguration -Filter "IPEnabled = 1" | % { $_.IPAddress | ? { -not $_.Contains(":") } }
 
