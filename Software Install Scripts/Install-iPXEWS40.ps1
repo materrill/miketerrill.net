@@ -89,7 +89,7 @@ $arguments = @(
 
     "/qn" #Quiet - with basic interface - for NO interface use /qn instead
 
-    "/norestart"
+    "/norestart" #Do not restart after install
 
     "/l*v $env:TEMP\iPXEWS-Install.log"    #Optional logging for the install
 
