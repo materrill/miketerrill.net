@@ -14,12 +14,81 @@
     26.08.26: Initial release
 #>
 
+Write-Host "Starting 2PXE 4.0 installation and configuration..." -ForegroundColor Cyan
+
 # Configuration 
+# Add your license key and uncomment the line below to use it and automate the install. 
+# $LicenseKey = "YOUR_LICENSE_KEY_HERE"
 # Set path to MSI file
-$msifile = "$PSScriptRoot\2Pint Software 2PXE Service (x64).msi"
+$msifile = "$PSScriptRoot\TwoPint.TwoPxe.Installer.msi"
 # This will use the connection specific suffix for the fqdn - useful when system is not domain joined
 $domain = [string](Get-DnsClient | Select-Object -ExpandProperty ConnectionSpecificSuffix)
 $fqdn = "$($env:COMPUTERNAME.Trim()).$($domain.Trim())"
-$iPXEWSURL = "https://$($fqdn):8051"
 # Grabs the IPv4 address - used for teh BINDTOIP property
 $IPv4 = Get-CimInstance -ClassName Win32_NetworkAdapterConfiguration -Filter "IPEnabled = 1" | % { $_.IPAddress | ? { -not $_.Contains(":") } }
+
+$arguments = @(
+#Mandatory msiexec Arguments
+
+    "/i"
+
+    "`"$msiFile`""
+
+    "AUTOSTART=1" #Automatically start the 2PXE service after install
+
+    "/qn" #Quiet - with basic interface - for NO interface use /qn instead
+
+    "/norestart"
+
+    "/l*v $env:TEMP\2PXE-Install.log"    #Optional logging for the install
+
+)   
+
+$IntegrationMode = "PowerShell"
+$BindToIP = $IPv4
+$EnablediPXEAnywhereWebServiceFeatures = "BootRequest, ReportBootConfiguration, ReportDLStart, ReportDLComplete, ReportDLBoot, RunCmdLineWinPE, ExtraFile, WinPEShl, Config, RunCmdLineWinPEEnd"
+$iPXEAnywhereWebServiceURI = "https://$($fqdn):8051"
+$StifleRWebServiceURI = "https://$($fqdn):9000"
+$IntegrateWithiPXEAnywhereWebService = "True"
+
+# Configure registry settings for 2PXE
+$regPath = "HKLM:\SOFTWARE\2Pint Software\2PXE\GeneralSettings"
+
+if (-not (Test-Path -Path $regPath)) {
+    New-Item -Path $regPath -Force | Out-Null
+}
+
+Write-Host "Configuring 2PXE registry values at $regPath"
+Write-Host "Setting IntegrationMode = $IntegrationMode"
+Set-ItemProperty -Path $regPath -Name "IntegrationMode" -Value $IntegrationMode -Type String
+Write-Host "Setting BindToIP = $BindToIP"
+Set-ItemProperty -Path $regPath -Name "BindToIP" -Value $BindToIP -Type String
+Write-Host "Setting EnablediPXEAnywhereWebServiceFeatures = $EnablediPXEAnywhereWebServiceFeatures"
+Set-ItemProperty -Path $regPath -Name "EnablediPXEAnywhereWebServiceFeatures" -Value $EnablediPXEAnywhereWebServiceFeatures -Type String
+Write-Host "Setting iPXEAnywhereWebServiceURI = $iPXEAnywhereWebServiceURI"
+Set-ItemProperty -Path $regPath -Name "iPXEAnywhereWebServiceURI" -Value $iPXEAnywhereWebServiceURI -Type String
+Write-Host "Setting StifleRWebServiceURI = $StifleRWebServiceURI"
+Set-ItemProperty -Path $regPath -Name "StifleRWebServiceURI" -Value $StifleRWebServiceURI -Type String
+Write-Host "Setting IntegrateWithiPXEAnywhereWebService = $IntegrateWithiPXEAnywhereWebService"
+Set-ItemProperty -Path $regPath -Name "IntegrateWithiPXEAnywhereWebService" -Value $IntegrateWithiPXEAnywhereWebService -Type String
+if ((Get-Variable -Name LicenseKey -ErrorAction SilentlyContinue) -and -not [string]::IsNullOrWhiteSpace($LicenseKey)) {
+    Write-Host "Setting LicenseKey = $($LicenseKey.Trim())"
+    Set-ItemProperty -Path $regPath -Name "LicenseKey" -Value $LicenseKey.Trim() -Type String
+}
+else {
+    Write-Host "LicenseKey is not defined. Skipping LicenseKey registry value."
+}
+
+# Install 2PXE using msiexec
+if (-not (Test-Path -Path $msiFile -PathType Leaf)) {
+    throw "MSI file not found: $msiFile"
+}
+
+Write-Host "Using the following install commands: $arguments" 
+$installProcess = Start-Process -FilePath "msiexec.exe" -ArgumentList $arguments -Wait -PassThru
+
+if ($installProcess.ExitCode -ne 0) {
+    throw "2PXE install failed. msiexec exit code: $($installProcess.ExitCode)"
+}
+
+Write-Host "2PXE installation completed successfully." -ForegroundColor Green
