@@ -15,7 +15,7 @@
     26.08.26: Initial release
 #>
 
-Write-Host "Starting 2PXE 4.0 installation and configuration..." -ForegroundColor Cyan
+Write-Host "Starting iPXEWS 4.0 installation and configuration..." -ForegroundColor Cyan
 
 # Ensure the script runs with elevated privileges
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
