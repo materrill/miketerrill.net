@@ -7,12 +7,13 @@
     It verifies the import, and handles common errors.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: August 26, 2026
-    Version: 26.08.26
+    Date: August 27, 2026
+    Version: 26.08.27
     Requires: Administrative privileges, 64-bit Windows
 
     Version history:
     26.08.26: Initial release
+    26.08.27: Added preflight check for Scripts directory and fixed the double \\ in the AdvancedConnectionString registry value.
 #>
 
 Write-Host "Starting iPXEWS 4.0 installation and configuration..." -ForegroundColor Cyan
@@ -20,6 +21,13 @@ Write-Host "Starting iPXEWS 4.0 installation and configuration..." -ForegroundCo
 # Ensure the script runs with elevated privileges
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     Write-Error "This script requires administrative privileges. Please run PowerShell as Administrator."
+    exit 1
+}
+
+# Preflight check: ensure the local Scripts directory exists before continuing.
+$preflightScriptsPath = Join-Path -Path (Split-Path -Parent $MyInvocation.MyCommand.Path) -ChildPath "Scripts"
+if (-not (Test-Path -Path $preflightScriptsPath -PathType Container)) {
+    Write-Error "Scripts directory not found at $preflightScriptsPath"
     exit 1
 }
 
@@ -74,7 +82,7 @@ $arguments = @(
 )   
 
 $SqlConnectionBy = "Advanced"
-$AdvancedConnectionString= "Server=.\\SQLExpress;Database=iPXEAnywhere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
+$AdvancedConnectionString= "Server=.\SQLExpress;Database=iPXEAnywhere;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
 $StifleRServerApiUrl = "https://$($fqdn):9000"
 
 # Configure registry settings for iPXEWS
