@@ -29,7 +29,7 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 $msifile = "$PSScriptRoot\TwoPint.TwoPxe.Installer.msi"
 # This will use the connection specific suffix for the fqdn - useful when system is not domain joined
 $domain = [string](Get-DnsClient | Select-Object -ExpandProperty ConnectionSpecificSuffix)
-$fqdn = "$($env:COMPUTERNAME.Trim()).$($domain.Trim())"
+$fqdn = [System.Net.Dns]::GetHostEntry($env:COMPUTERNAME).HostName
 # Grabs the IPv4 address - used for teh BINDTOIP property
 $IPv4 = Get-CimInstance -ClassName Win32_NetworkAdapterConfiguration -Filter "IPEnabled = 1" | % { $_.IPAddress | ? { -not $_.Contains(":") } }
 
