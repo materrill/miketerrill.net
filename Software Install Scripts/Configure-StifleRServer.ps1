@@ -7,8 +7,8 @@
     It verifies the import, and handles common errors.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: August 4, 2025
-    Version: 25.08.04
+    Date: August 28, 2026
+    Version: 26.08.28
     Requires: Administrative privileges, 64-bit Windows
 
     Version history:

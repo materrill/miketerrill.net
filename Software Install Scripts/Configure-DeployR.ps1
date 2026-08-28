@@ -7,14 +7,16 @@
     It verifies the import, and handles common errors.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: July 30, 2026
-    Version: 26.07.30
+    Date: August 28, 2026
+    Version: 26.08.28
     Requires: Administrative privileges, 64-bit Windows
 
     Version history:
-    26.07.30: Removed the firewall rules creation (this is done by the service). Added SqlConnectionBy registry value.
-    25.11.05: Added the creation of firewall rules and bypass for authentication
     25.07.23: Initial release
+    25.11.05: Added the creation of firewall rules and bypass for authentication
+    26.07.30: Removed the firewall rules creation (this is done by the service). Added SqlConnectionBy registry value.
+    26.08.28: Modified the Cert Issuer from *2PintSoftware.com* to *2Pint* to support the new online issued certificates.
+    
 #>
 
 # Ensure the script runs with elevated privileges
@@ -49,7 +51,7 @@ try {
     $store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadOnly)
 
     # Find certificates where the issuer contains "2PintSoftware.com"
-    $certificates = $store.Certificates | Where-Object { $_.Issuer -like "*2PintSoftware.com*" }
+    $certificates = $store.Certificates | Where-Object { $_.Issuer -like "*2Pint*" }
 
     if (-not $certificates) {
         Write-Host "No certificates found issued by 2PintSoftware.com in the Local Machine Personal store."
