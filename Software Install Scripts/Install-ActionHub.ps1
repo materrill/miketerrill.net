@@ -98,6 +98,7 @@ Write-Host "Configuring the StifleR ActionHub registry values at $regPath"
 Write-Host "Setting Servers = $Servers"
 Set-ItemProperty -Path $regPath -Name "Servers" -Value $Servers -Type String
 Write-Host "Setting ExternalIp = $ExternalIp"
+Set-ItemProperty -Path $regPath -Name "ExternalIp" -Value $ExternalIp -Type String
 
 # Install the StifleR ActionHub using msiexec
 Write-Host "Using the following install commands: $arguments" 
