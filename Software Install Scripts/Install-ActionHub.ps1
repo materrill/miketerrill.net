@@ -66,6 +66,73 @@ else {
     $fqdn = Get-LocalFqdn
 }
 
+try {
+    # Open the Local Machine's Personal certificate store
+    $store = New-Object System.Security.Cryptography.X509Certificates.X509Store(
+        [System.Security.Cryptography.X509Certificates.StoreName]::My,
+        [System.Security.Cryptography.X509Certificates.StoreLocation]::LocalMachine
+    )
+    $store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadOnly)
+
+    # Find certificates where the issuer contains "2PintSoftware.com"
+    $certificates = $store.Certificates | Where-Object { $_.Issuer -like "*2Pint*" }
+
+    if (-not $certificates) {
+        Write-Host "No certificates found issued by 2PintSoftware.com in the Local Machine Personal store."
+        $store.Close()
+        exit 0
+    }
+
+    # Iterate through matching certificates
+    foreach ($cert in $certificates) {
+        Write-Host "---------------------------------------------"
+        Write-Host "Certificate Found:"
+        Write-Host "Subject: $($cert.Subject)"
+        Write-Host "Issuer: $($cert.Issuer)"
+        Write-Host "Thumbprint: $($cert.Thumbprint)"
+        Write-Host "Valid From: $($cert.NotBefore)"
+        Write-Host "Valid Until: $($cert.NotAfter)"
+
+        # Check for Subject Alternative Name extension
+        $sanExtension = $cert.Extensions | Where-Object { $_.Oid.FriendlyName -eq "Subject Alternative Name" }
+
+        if ($sanExtension) {
+            Write-Host "Subject Alternative Names (SANs):"
+            # Parse the SAN extension
+            $sanRawData = $sanExtension.Format($true)
+            # Split the SAN data into lines and look for DNS names
+            $sanEntries = $sanRawData -split "`n" | Where-Object { $_ -match "DNS Name=" }
+            
+            if ($sanEntries) {
+                foreach ($entry in $sanEntries) {
+                    # Extract the FQDN from the DNS Name entry
+                    $SANfqdn = $entry -replace "DNS Name=", "" -replace "\s", ""
+                    $Thumbprint = $cert.Thumbprint
+                    Write-Host "  - FQDN: $SANfqdn"
+                    Write-Host "  - Thumbprint: $Thumbprint"
+                    if ($SANfqdn -eq $fqdn) {
+                        $match = $true
+                        $Thumbprint = $cert.Thumbprint
+                    }
+                }
+            } else {
+                Write-Host "  No DNS Names found in SAN."
+            }
+        } else {
+            Write-Host "No Subject Alternative Name extension found."
+        }
+        Write-Host "---------------------------------------------"
+    }
+
+    # Close the store
+    $store.Close()
+}
+catch {
+    Write-Error "An error occurred: $_"
+    if ($store) { $store.Close() }
+    exit 1
+}
+
 # Configuration 
 $arguments = @(
 #Mandatory msiexec Arguments
@@ -99,6 +166,8 @@ Write-Host "Setting Servers = $Servers"
 Set-ItemProperty -Path $regPath -Name "Servers" -Value $Servers -Type String
 Write-Host "Setting ExternalIp = $ExternalIp"
 Set-ItemProperty -Path $regPath -Name "ExternalIp" -Value $ExternalIp -Type String
+Write-Host "Setting CertificateThumbprint = $Thumbprint"
+Set-ItemProperty -Path $regPath -Name "CertificateThumbprint" -Value $Thumbprint -Type String
 
 # Install the StifleR ActionHub using msiexec
 Write-Host "Using the following install commands: $arguments" 
