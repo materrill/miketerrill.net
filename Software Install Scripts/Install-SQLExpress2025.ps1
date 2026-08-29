@@ -6,12 +6,13 @@
     It configures a basic instance with default settings and logs the process for troubleshooting.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: February 4, 2026
-    Version: 26.02.04
+    Date: August 29, 2026
+    Version: 26.08.29
     Requires: Administrative privileges, 64-bit Windows, internet access
 
 CHANGELOG
-    26.02.04 - Initial version
+    26.02.04: Initial version
+    26.08.29: Exit code handling added for non-zero exit codes from the installer.
 #>
 
 # Configuration  
@@ -292,6 +293,11 @@ try {
     $Process = Start-Process -FilePath $InstallerPath -ArgumentList $Arguments -Wait -PassThru -ErrorAction Stop
 
     Write-Log -Message "Installation exit code: $($Process.ExitCode)" -LogFile $LogFile
+    if ($Process.ExitCode -ne 0) {
+        Write-Log -Message "ERROR: SQL Server installer returned non-zero exit code $($Process.ExitCode)." -LogFile $LogFile
+        Write-Error "SQL Server installer failed with exit code $($Process.ExitCode)."
+        exit $Process.ExitCode
+    }
 
 } catch {
     Write-Log -Message "ERROR: Installation process failed. Error: $($_.Exception.Message)" -LogFile $LogFile
