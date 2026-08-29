@@ -12,7 +12,7 @@
 
     Version history:
     26.02.04: Initial version
-    26.08.29: Exit code handling added for non-zero exit codes from the installer.
+    26.08.29: Exit code handling added for non-zero exit codes from the installer, and installation context/account.
 #>
 
 # Configuration  
@@ -227,6 +227,18 @@ function Test-SQLExpressInstalled {
 
 # Start logging
 Write-Log -Message "Starting SQL Server 2025 Express installation script." -LogFile $LogFile
+
+# Show execution context/account
+$CurrentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+$CurrentPrincipal = [Security.Principal.WindowsPrincipal]::new($CurrentIdentity)
+$RunAsAccount = $CurrentIdentity.Name
+$RunAsSid = $CurrentIdentity.User.Value
+$IsElevated = $CurrentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+Write-Host "Running install as account: $RunAsAccount"
+Write-Host "Running install as SID: $RunAsSid"
+Write-Host "Elevated token: $IsElevated"
+Write-Log -Message "Execution context: Account=$RunAsAccount; SID=$RunAsSid; Elevated=$IsElevated" -LogFile $LogFile
 
 # Check for administrative privileges
 # Ensure the script runs with elevated privileges
