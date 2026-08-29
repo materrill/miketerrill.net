@@ -10,7 +10,7 @@
     Version: 26.08.29
     Requires: Administrative privileges, 64-bit Windows, internet access
 
-CHANGELOG
+    Version history:
     26.02.04: Initial version
     26.08.29: Exit code handling added for non-zero exit codes from the installer.
 #>
