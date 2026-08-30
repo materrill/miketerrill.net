@@ -6,19 +6,25 @@
     It logs the process and handles common errors, suitable for large-scale deployment scenarios.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: August 26, 2026
-    Version: 26.08.27
+    Date: August 29, 2026
+    Version: 26.08.29
     Requires: Administrative privileges, 64-bit Windows (10/11, Server 2016+), internet access
     
     Version history:
     26.08.26: Initial release
     26.08.27: Added preflight check for MSI file. Support for External FQDN.
+    26.08.29: Added $LicenseKey and $ExternalFQDN parameters to allow passing in values from outside the script.
 #>
 
-# Add your license key and uncomment the line below to use it and automate the install. 
-# $LicenseKey = "YOUR_LICENSE_KEY_HERE"
-# If using an external FQDN for the iPXEWS, set it here and uncomment the line below. If not set, the script will use the local FQDN.
-# $ExternalFQDN = "server.company.com"
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
+    [string]$LicenseKey,
+
+    [Parameter(Mandatory = $false)]
+    [string]$ExternalFQDN
+)
 
 Write-Host "Starting 2PXE 4.0 installation and configuration..." -ForegroundColor Cyan
 
@@ -61,7 +67,7 @@ function Get-LocalFqdn {
     return $hostName
 }
 
-if ((Get-Variable -Name ExternalFQDN -ErrorAction SilentlyContinue) -and -not [string]::IsNullOrWhiteSpace($ExternalFQDN)) {
+if (-not [string]::IsNullOrWhiteSpace($ExternalFQDN)) {
     $fqdn = $ExternalFQDN.Trim()
 }
 else {
@@ -116,17 +122,12 @@ Write-Host "Setting StifleRWebServiceURI = $StifleRWebServiceURI"
 Set-ItemProperty -Path $regPath -Name "StifleRWebServiceURI" -Value $StifleRWebServiceURI -Type String
 Write-Host "Setting IntegrateWithiPXEAnywhereWebService = $IntegrateWithiPXEAnywhereWebService"
 Set-ItemProperty -Path $regPath -Name "IntegrateWithiPXEAnywhereWebService" -Value $IntegrateWithiPXEAnywhereWebService -Type String
-if ((Get-Variable -Name ExternalFQDN -ErrorAction SilentlyContinue) -and -not [string]::IsNullOrWhiteSpace($ExternalFQDN)) {
+if (-not [string]::IsNullOrWhiteSpace($ExternalFQDN)) {
     Write-Host "Setting ExternalFQDNOverride = $($ExternalFQDN.Trim())"
     Set-ItemProperty -Path $regPath -Name "ExternalFQDNOverride" -Value $ExternalFQDN.Trim() -Type String
 }
-if ((Get-Variable -Name LicenseKey -ErrorAction SilentlyContinue) -and -not [string]::IsNullOrWhiteSpace($LicenseKey)) {
-    Write-Host "Setting LicenseKey = $($LicenseKey.Trim())"
-    Set-ItemProperty -Path $regPath -Name "LicenseKey" -Value $LicenseKey.Trim() -Type String
-}
-else {
-    Write-Host "LicenseKey is not defined. Skipping LicenseKey registry value."
-}
+Write-Host "Setting LicenseKey = $($LicenseKey.Trim())"
+Set-ItemProperty -Path $regPath -Name "LicenseKey" -Value $LicenseKey.Trim() -Type String
 
 # Install 2PXE using msiexec
 Write-Host "Using the following install commands: $arguments" 
