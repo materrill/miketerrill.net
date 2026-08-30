@@ -6,17 +6,23 @@
     It logs the process and handles common errors, suitable for large-scale deployment scenarios.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: August 28, 2026
-    Version: 26.08.28
+    Date: August 29, 2026
+    Version: 26.08.29
     Requires: Administrative privileges, 64-bit Windows (10/11, Server 2016+), internet access
     
     Version history:
     26.08.28: Initial release
+    26.08.29: Updated to take ExternalFQDN and an optional parameter.
   
 #>
 
-# If using an external FQDN, set it here and uncomment the line below. If not set, the script will use the local FQDN.
-# $ExternalFQDN = "server.company.com"
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $false)]
+    [string]$ExternalFQDN
+)
+
+# Optional: pass -ExternalFQDN "server.company.com". If not set, the script will use the local FQDN.
 
 Write-Host "Starting the StifleR ActionHub installation and configuration..." -ForegroundColor Cyan
 
