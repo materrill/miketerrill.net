@@ -6,20 +6,19 @@
     It logs the process and handles common errors, suitable for large-scale deployment scenarios.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: August 29, 2026
-    Version: 26.08.29
+    Date: August 30, 2026
+    Version: 26.08.30
     Requires: Administrative privileges, 64-bit Windows (10/11, Server 2016+), internet access
     
     Version history:
     26.08.26: Initial release
     26.08.27: Added preflight check for MSI file. Support for External FQDN.
     26.08.29: Added $LicenseKey and $ExternalFQDN parameters to allow passing in values from outside the script.
+    26.08.30: Added check for existing LicenseKey in registry if not passed as a parameter.
 #>
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)]
-    [ValidateNotNullOrEmpty()]
     [string]$LicenseKey,
 
     [Parameter(Mandatory = $false)]
@@ -109,6 +108,18 @@ if (-not (Test-Path -Path $regPath)) {
     New-Item -Path $regPath -Force | Out-Null
 }
 
+if ([string]::IsNullOrWhiteSpace($LicenseKey)) {
+    $existingLicenseKey = (Get-ItemProperty -Path $regPath -Name "LicenseKey" -ErrorAction SilentlyContinue).LicenseKey
+    if (-not [string]::IsNullOrWhiteSpace($existingLicenseKey)) {
+        $LicenseKey = $existingLicenseKey.Trim()
+        Write-Host "LicenseKey parameter not specified. Using existing registry value."
+    }
+    else {
+        Write-Error "LicenseKey parameter was not specified and no existing LicenseKey registry value was found at $regPath."
+        exit 1
+    }
+}
+
 Write-Host "Configuring 2PXE registry values at $regPath"
 Write-Host "Setting IntegrationMode = $IntegrationMode"
 Set-ItemProperty -Path $regPath -Name "IntegrationMode" -Value $IntegrationMode -Type String
@@ -126,8 +137,14 @@ if (-not [string]::IsNullOrWhiteSpace($ExternalFQDN)) {
     Write-Host "Setting ExternalFQDNOverride = $($ExternalFQDN.Trim())"
     Set-ItemProperty -Path $regPath -Name "ExternalFQDNOverride" -Value $ExternalFQDN.Trim() -Type String
 }
-Write-Host "Setting LicenseKey = $($LicenseKey.Trim())"
-Set-ItemProperty -Path $regPath -Name "LicenseKey" -Value $LicenseKey.Trim() -Type String
+if (-not [string]::IsNullOrWhiteSpace($LicenseKey)) {
+    Write-Host "Setting LicenseKey = $($LicenseKey.Trim())"
+    Set-ItemProperty -Path $regPath -Name "LicenseKey" -Value $LicenseKey.Trim() -Type String
+}
+else {
+    Write-Error "LicenseKey is unavailable. Cannot continue."
+    exit 1
+}
 
 # Install 2PXE using msiexec
 Write-Host "Using the following install commands: $arguments" 
