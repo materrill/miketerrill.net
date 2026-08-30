@@ -19,6 +19,7 @@
 
 [CmdletBinding()]
 param(
+    [Parameter(Mandatory = $false)]
     [string]$LicenseKey,
 
     [Parameter(Mandatory = $false)]

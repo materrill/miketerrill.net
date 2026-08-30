@@ -7,20 +7,25 @@
     It verifies the import, and handles common errors.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: August 27, 2026
-    Version: 26.08.27
+    Date: August 30, 2026
+    Version: 26.08.30
     Requires: Administrative privileges, 64-bit Windows
 
     Version history:
     26.08.26: Initial release
     26.08.27: Added preflight check for Scripts directory, fixed the double \\ in the AdvancedConnectionString registry value,
               and added the option for an external FQDN.
+    26.08.30: Added $LicenseKey and $ExternalFQDN parameters. Added check for existing LicenseKey in registry if not passed as a parameter.
 #>
 
-# Add your license key and uncomment the line below to use it and automate the install. 
-# $LicenseKey = "YOUR_LICENSE_KEY_HERE"
-# If using an external FQDN for the iPXEWS, set it here and uncomment the line below. If not set, the script will use the local FQDN.
-# $ExternalFQDN = "server.company.com"
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $false)]
+    [string]$LicenseKey,
+
+    [Parameter(Mandatory = $false)]
+    [string]$ExternalFQDN
+)
 
 Write-Host "Starting iPXEWS 4.0 installation and configuration..." -ForegroundColor Cyan
 
@@ -70,7 +75,7 @@ function Get-LocalFqdn {
     return $hostName
 }
 
-if ((Get-Variable -Name ExternalFQDN -ErrorAction SilentlyContinue) -and -not [string]::IsNullOrWhiteSpace($ExternalFQDN)) {
+if (-not [string]::IsNullOrWhiteSpace($ExternalFQDN)) {
     $fqdn = $ExternalFQDN.Trim()
 }
 else {
@@ -106,6 +111,18 @@ if (-not (Test-Path -Path $regPath)) {
     New-Item -Path $regPath -Force | Out-Null
 }
 
+if ([string]::IsNullOrWhiteSpace($LicenseKey)) {
+    $existingLicenseKey = (Get-ItemProperty -Path $regPath -Name "LicenseKey" -ErrorAction SilentlyContinue).LicenseKey
+    if (-not [string]::IsNullOrWhiteSpace($existingLicenseKey)) {
+        $LicenseKey = $existingLicenseKey.Trim()
+        Write-Host "LicenseKey parameter not specified. Using existing registry value."
+    }
+    else {
+        Write-Error "LicenseKey parameter was not specified and no existing LicenseKey registry value was found at $regPath."
+        exit 1
+    }
+}
+
 Write-Host "Configuring iPXEWS registry values at $regPath"
 Write-Host "Setting SqlConnectionBy = $SqlConnectionBy"
 Set-ItemProperty -Path $regPath -Name "SqlConnectionBy" -Value $SqlConnectionBy -Type String
@@ -113,16 +130,17 @@ Write-Host "Setting AdvancedConnectionString = $AdvancedConnectionString"
 Set-ItemProperty -Path $regPath -Name "AdvancedConnectionString" -Value $AdvancedConnectionString -Type String
 Write-Host "Setting StifleRServerApiUrl = $StifleRServerApiUrl"
 Set-ItemProperty -Path $regPath -Name "StifleRServerApiUrl" -Value $StifleRServerApiUrl -Type String
-if ((Get-Variable -Name ExternalFQDN -ErrorAction SilentlyContinue) -and -not [string]::IsNullOrWhiteSpace($ExternalFQDN)) {
+if (-not [string]::IsNullOrWhiteSpace($ExternalFQDN)) {
     Write-Host "Setting ExternalFQDNOverride = $($ExternalFQDN.Trim())"
     Set-ItemProperty -Path $regPath -Name "ExternalFQDNOverride" -Value $ExternalFQDN.Trim() -Type String
 }
-if ((Get-Variable -Name LicenseKey -ErrorAction SilentlyContinue) -and -not [string]::IsNullOrWhiteSpace($LicenseKey)) {
+if (-not [string]::IsNullOrWhiteSpace($LicenseKey)) {
     Write-Host "Setting LicenseKey = $($LicenseKey.Trim())"
     Set-ItemProperty -Path $regPath -Name "LicenseKey" -Value $LicenseKey.Trim() -Type String
 }
 else {
-    Write-Host "LicenseKey is not defined. Skipping LicenseKey registry value."
+    Write-Error "LicenseKey is unavailable. Cannot continue."
+    exit 1
 }
 
 # Install iPXEWS using msiexec
