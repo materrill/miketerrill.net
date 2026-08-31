@@ -11,13 +11,14 @@
 
 .NOTES
     Author: Mike Terrill / 2Pint Software
-    Date: August 28, 2026
-    Version: 26.08.28
+    Date: August 30, 2026
+    Version: 26.08.30
     Requires: Administrative privileges, 64-bit Windows
 
     Version history:
     26.08.06: Initial release
     26.08.28: Added support for multiple DEPLOYR services (2PXE, iPXEWS, etc.)
+    26.08.30: Added optional parameter to specify expected number of online services for TargetHostname.
 
 .PARAMETER MaxRetries
     Maximum number of attempts to find the online service (default: 30).
@@ -30,6 +31,10 @@
 
 .PARAMETER TargetHostname
     Hostname of the infrastructure service to wait for (default: DEPLOYR).
+
+.PARAMETER NumberOfServices
+    Optional expected number of online services for TargetHostname. When specified,
+    approvals run only after this exact count is returned.
 #>
 
 [CmdletBinding()]
@@ -37,7 +42,8 @@ param(
     [int]$MaxRetries = 30,
     [int]$RetryDelaySeconds = 10,
     [string]$ApiBaseUrl = "https://deployr.2pintlabs.local:9000/api/infrastructureService",
-    [string]$TargetHostname = "DEPLOYR"
+    [string]$TargetHostname = "DEPLOYR",
+    [Nullable[int]]$NumberOfServices
 )
 
 $ErrorActionPreference = "Stop"
@@ -95,6 +101,9 @@ Write-Host "Waiting for hostname '$TargetHostname' to appear online..."
 Write-Host "API Base     : $ApiBaseUrl"
 Write-Host "Max retries  : $MaxRetries"
 Write-Host "Retry delay  : $RetryDelaySeconds second(s)"
+if ($null -ne $NumberOfServices) {
+    Write-Host "Expected cnt : $NumberOfServices"
+}
 Write-Host ""
 
 $attempt = 0
@@ -107,8 +116,13 @@ while ($attempt -lt $MaxRetries) {
     $services = Get-DeployRServices -Uri $ApiBaseUrl -Hostname $TargetHostname
 
     if ($services.Count -gt 0) {
-        Write-Host "FOUND $($services.Count) online service(s)" -ForegroundColor Green
-        break
+        if ($null -ne $NumberOfServices -and $services.Count -ne $NumberOfServices) {
+            Write-Host "found $($services.Count) online service(s), waiting for $NumberOfServices" -ForegroundColor Yellow
+        }
+        else {
+            Write-Host "FOUND $($services.Count) online service(s)" -ForegroundColor Green
+            break
+        }
     }
     else {
         Write-Host "not ready" -ForegroundColor Yellow
@@ -122,6 +136,12 @@ while ($attempt -lt $MaxRetries) {
 if ($services.Count -eq 0) {
     Write-Host ""
     Write-Host "Failed: no '$TargetHostname' service became online after $MaxRetries attempts." -ForegroundColor Red
+    exit 1
+}
+
+if ($null -ne $NumberOfServices -and $services.Count -ne $NumberOfServices) {
+    Write-Host ""
+    Write-Host "Failed: expected $NumberOfServices online '$TargetHostname' service(s), found $($services.Count) after $MaxRetries attempts." -ForegroundColor Red
     exit 1
 }
 

@@ -7,8 +7,8 @@
     It verifies the import, and handles common errors.
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: August 28, 2026
-    Version: 26.08.28
+    Date: August 30, 2026
+    Version: 26.08.30
     Requires: Administrative privileges, 64-bit Windows
 
     Version history:
@@ -16,6 +16,7 @@
     25.11.05: Added the creation of firewall rules and bypass for authentication
     26.07.30: Removed the firewall rules creation (this is done by the service). Added SqlConnectionBy registry value.
     26.08.28: Modified the Cert Issuer from *2PintSoftware.com* to *2Pint* to support the new online issued certificates.
+    26.08.30: Changed ClientPasscode to P@ssword.
     
 #>
 
@@ -158,7 +159,7 @@ Set-ItemProperty -Path $regPath -Name "JoinInfrastructure" -Value "$JoinInfrastr
 Set-ItemProperty -Path $regPath -Name "StifleRServerApiUrl" -Value "$StifleRServerApiUrl" -Type String
 Set-ItemProperty -Path $regPath -Name "BypassAuthentication" -Value "True" -Type String
 Set-ItemProperty -Path $regPath -Name "BypassLocalAuthentication" -Value "True" -Type String
-Set-ItemProperty -Path $regPath -Name "ClientPasscode" -Value "P@ssw0rd" -Type String
+Set-ItemProperty -Path $regPath -Name "ClientPasscode" -Value "P@ssword" -Type String
 Set-ItemProperty -Path $regPath -Name "SqlConnectionBy" -Value "ServerInstanceAndDB" -Type String
 
 # Set optional registry values
