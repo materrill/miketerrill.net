@@ -9,17 +9,18 @@
 
 .NOTES
     Author: Mike Terrill / 2Pint Software
-    Date: June 12, 2026
-    Version: 26.06.17
+    Date: September 2, 2026
+    Version: 26.09.02
     Requires: Administrative privileges, 64-bit Windows
 
     Version history:
-    26.06.17: Removed the functions and section for modifying the desktop image
-    26.06.13: Added the functions and section for modifying the desktop image
+    26.02.10: Initial release (based on Create-VMsFromCSV.ps1)
+    26.06.10: Added a TS variable (OfflineWindows) for the offline Windows drive letter and a parameter for unmounting and applying WIM
     26.06.12: Added copying and modifying the matching unattend file
               Added copying of the DeployR ISO contents and the DeployR-BuildLabKit.ps1 to the root of the VHDX Windows drive
-    26.06.10: Added a TS variable (OfflineWindows) for the offline Windows drive letter and a parameter for unmounting and applying WIM
-    26.02.10: Initial release (based on Create-VMsFromCSV.ps1)
+    26.06.13: Added the functions and section for modifying the desktop image
+    26.06.17: Removed the functions and section for modifying the desktop image
+    26.09.02: Added support for reading the keyboard layout from a JSON file and updating the unattend.xml accordingly.
 
 .EXAMPLE
     To be used in a DeployR Task Sequence
@@ -188,6 +189,21 @@ if ($ApplyWIM) {
             Write-Host "Successfully copied $templateFile to $destinationFile and updated Computername to '$computerName'" -ForegroundColor Green
         } else {
             Write-Error "Failed to copy unattend file to Panther directory."
+            exit 1
+        }
+    }
+
+    # Update InputLocale when task sequence keyboard layout is provided and not default.
+    if ((-not [string]::IsNullOrWhiteSpace($tsenv:KeyboardLayout)) -and ($tsenv:KeyboardLayout -ne "0409:00000409")) {
+        if (Test-Path $destinationFile) {
+            $content = Get-Content $destinationFile -Raw -Encoding UTF8
+            $updatedContent = $content -replace '<InputLocale>0409:00000409</InputLocale>', "<InputLocale>$($tsenv:KeyboardLayout)</InputLocale>"
+            Set-Content -Path $destinationFile -Value $updatedContent -Encoding UTF8 -Force
+
+            Write-Host "Updated InputLocale in $destinationFile to '$($tsenv:KeyboardLayout)'" -ForegroundColor Green
+        }
+        else {
+            Write-Error "Unattend file not found for keyboard layout update: $destinationFile"
             exit 1
         }
     }
