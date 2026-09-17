@@ -14,53 +14,56 @@
         
     Version history:
     26.09.17: Initial release
+    26.09.17: Updated to use raw TCP socket for connectivity test in WinPE/WinRE
+    26.09.17: Added transcript logging for debugging purposes
  
 #>
 
-$DeployRServer = "deployr.2pintdemo.net"
+if (Get-PSProvider TSENV -ErrorAction SilentlyContinue){
+    $DeployRServer = ([System.Uri]$TSENV:DEPLOYRHOST).Host
+}
+else {
+    $DeployRServer = "deployr.2p.garytown.com"
+}
+
 
 $MaxWaitSeconds = 120
 $IntervalSeconds = 10
 
+$LogFolder = Join-Path $env:SystemDrive "_2P\Logs"
+if (-not (Test-Path -Path $LogFolder)){
+    $LogFolder = $env:TEMP
+}
+
+Start-Transcript -Path (Join-Path $LogFolder "TestDeployRConnect.txt") -Force | Out-Null
+
 function Get-NetworkInfo {
 
-    $Config = Get-NetIPConfiguration | Where-Object {
-        $_.IPv4Address -or $_.IPv4DefaultGateway
+    # Get-NetIPConfiguration/Get-NetIPAddress aren't available in WinPE, so use CIM/WMI instead
+    $WmiAdapter = Get-CimInstance Win32_NetworkAdapterConfiguration | Where-Object {
+        $_.IPEnabled -and
+        $_.DefaultIPGateway -and
+        ($_.IPAddress | Where-Object { $_ -notlike '*:*' -and $_ -notlike '169.254*' })
     } | Select-Object -First 1
 
-    if (-not $Config) {
+    if (-not $WmiAdapter) {
         return $null
     }
 
-    $IPInfo = Get-NetIPAddress `
-        -InterfaceIndex $Config.InterfaceIndex `
-        -AddressFamily IPv4 |
-        Where-Object { $_.IPAddress -notlike '169.254*' } |
-        Select-Object -First 1
-
-    if (-not $IPInfo) {
-        return $null
-    }
-
-    $WmiAdapter = Get-CimInstance Win32_NetworkAdapterConfiguration |
-        Where-Object {
-            $_.IPEnabled -and
-            $_.InterfaceIndex -eq $Config.InterfaceIndex
-        }
-
-    $SubnetMask = $WmiAdapter.IPSubnet |
-        Where-Object { $_ -and $_ -notlike '*:*' } |
-        Select-Object -First 1
+    $IPAddress = $WmiAdapter.IPAddress | Where-Object { $_ -notlike '*:*' -and $_ -notlike '169.254*' } | Select-Object -First 1
+    $SubnetMask = $WmiAdapter.IPSubnet | Where-Object { $_ -and $_ -notlike '*:*' } | Select-Object -First 1
 
     [PSCustomObject]@{
-        Adapter    = $Config.InterfaceAlias
-        IPAddress  = $IPInfo.IPAddress
+        Adapter    = $WmiAdapter.Description
+        IPAddress  = $IPAddress
         SubnetMask = $SubnetMask
-        Gateway    = $Config.IPv4DefaultGateway.NextHop
+        Gateway    = ($WmiAdapter.DefaultIPGateway | Where-Object { $_ -notlike '*:*' } | Select-Object -First 1)
         DHCPServer = $WmiAdapter.DHCPServer
-        DNSServers = ($Config.DNSServer.ServerAddresses -join ', ')
+        DNSServers = ($WmiAdapter.DNSServerSearchOrder -join ', ')
     }
 }
+
+try {
 
 #
 # Phase 1 - Wait for network configuration
@@ -100,11 +103,11 @@ $Connected = $false
 while ($Elapsed -lt $MaxWaitSeconds) {
 
     try {
-        $Test = Test-NetConnection `
-            -ComputerName $DeployRServer `
-            -Port 7281 `
-            -WarningAction SilentlyContinue `
-            -InformationLevel Quiet
+        # Test-NetConnection isn't available in WinPE, so use a raw TCP socket instead
+        $TcpClient = [System.Net.Sockets.TcpClient]::new()
+        $ConnectTask = $TcpClient.ConnectAsync($DeployRServer, 7281)
+        $Test = $ConnectTask.Wait(5000) -and $TcpClient.Connected
+        $TcpClient.Close()
 
         if ($Test) {
             Write-Host "Successfully connected to $DeployRServer on port 7281." -ForegroundColor Green
@@ -127,3 +130,8 @@ if (-not $Connected) {
 }
 
 exit 0
+
+}
+finally {
+    Stop-Transcript | Out-Null
+}
