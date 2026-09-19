@@ -9,8 +9,12 @@
 
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: July 31, 2026
-    Version: 26.07.31
+    Date: September 19, 2026
+    Version: 26.09.19
+
+    Version history:
+    26.07.31: Initial release
+    26.09.19: Changed logic to detect task sequence completion based on EndTime instead of Progress/Tasks comparison. 
 #>
 
 param(
@@ -183,7 +187,7 @@ while ($true)
             break
         }
 
-        if (($TS.Progress -eq $TS.Tasks) -and ($TS.Tasks -gt 0))
+        if ($TS.EndTime -and ([string]$TS.EndTime -ne "0001-01-01T00:00:00"))
         {
             Write-Host ""
             Write-Host "Task Sequence Complete" `
