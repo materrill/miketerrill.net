@@ -187,7 +187,7 @@ while ($true)
             break
         }
 
-        if ($TS.EndTime -and ([string]$TS.EndTime -ne "0001-01-01T00:00:00"))
+        if ($TS.StartTime -and $TS.EndTime -and ([datetime]$TS.EndTime -gt [datetime]$TS.StartTime))
         {
             Write-Host ""
             Write-Host "Task Sequence Complete" `
