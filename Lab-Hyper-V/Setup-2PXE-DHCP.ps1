@@ -12,7 +12,7 @@
     Version: 26.09.27
 
     Version history:
-    26.04.23 Initial release (2PXE policies originally based on a script by Niklas Larsson
+    26.04.23 Initial release (2PXE policies originally based on a script by Niklas Larsson)
     26.09.27 Added step to clear the Server Manager flag
 
 .EXAMPLE
