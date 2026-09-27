@@ -8,11 +8,12 @@
 
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: April 23, 2026
-    Version: 26.04.23
+    Date: September 27, 2026
+    Version: 26.09.27
 
     Version history:
     26.04.23 Initial release (2PXE policies originally based on a script by Niklas Larsson
+    26.09.27 Added step to clear the Server Manager flag
 
 .EXAMPLE
     .\Setup-2PXE-DHCP.ps1 -CreateScope -StartIP "10.10.10.100" -EndIP "10.10.10.200" `
@@ -108,6 +109,10 @@ if ($AuthorizeInAD) {
         Write-Warning "This is often due to insufficient permissions (need Domain Admin or delegated rights)."
     }
 }
+
+# === Clear the Server Manager flag ===
+Write-Host "Clearing Server Manager flag" -ForegroundColor Green
+Set-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\ServerManager\Roles\12 -Name ConfigurationState -Value 2
 
 # Option 60 (for co-located 2PXE)
 $Option60 = $EnableOption60
