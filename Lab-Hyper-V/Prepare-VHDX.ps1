@@ -21,6 +21,7 @@
     26.06.13: Added the functions and section for modifying the desktop image
     26.06.17: Removed the functions and section for modifying the desktop image
     26.09.02: Added support for reading the keyboard layout from a JSON file and updating the unattend.xml accordingly.
+    26.10.07: Updated unattend template mapping for the new names (DC01 and 2PINT01)
 
 .EXAMPLE
     To be used in a DeployR Task Sequence
@@ -140,11 +141,11 @@ if ($ApplyWIM) {
     if ($Computername -like "2PINT-LABKIT*") {
         $templateFile = "2PINT-LABKIT.xml"
     }
-    elseif ($Computername -like "DC*") {
-        $templateFile = "DC.xml"
+    elseif ($Computername -like "DC01*") {
+        $templateFile = "DC01.xml"
     }
-    elseif ($Computername -like "DEPLOYR*") {
-    $templateFile = "DEPLOYR.xml"
+    elseif ($Computername -like "2PINT01*") {
+    $templateFile = "2PINT01.xml"
     }
     else {
         Write-Error "Computername '$Computername' does not match any known prefix (2PINT-LABKIT, DC, or DEPLOYR)."
