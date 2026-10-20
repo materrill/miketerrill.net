@@ -8,7 +8,7 @@
 .NOTES
     Author: Mike Terrill/2Pint Software
     Date: August 30, 2026
-    Version: 26.08.30
+    Version: 26.10.19
     Requires: Administrative privileges, 64-bit Windows
 
     Version history:
@@ -17,6 +17,7 @@
     26.07.30: Removed the firewall rules creation (this is done by the service). Added SqlConnectionBy registry value.
     26.08.28: Modified the Cert Issuer from *2PintSoftware.com* to *2Pint* to support the new online issued certificates.
     26.08.30: Changed ClientPasscode to P@ssword.
+    26.10.19: Changed the default SQL connection to SQLLite and added variables for the other settings.
     
 #>
 
@@ -31,6 +32,10 @@ $domain = [string](Get-DnsClient | Select-Object -ExpandProperty ConnectionSpeci
 $fqdn = "$($env:COMPUTERNAME.Trim()).$($domain.Trim())" # Or set a static value, e.g., "2PINT.corp.viamonstra.com"
 
 # Required Settings
+$BypassAuthentication = "True"
+$BypassLocalAuthentication = "True"
+$ClientPasscode = "P@ssword"
+$SqlConnectionBy = "SQLite" # "ServerInstanceAndDB" if using SQL or SQL Express
 $ConnectionString = "Server=.\SQLEXPRESS;Database=DeployR;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
 $ClientURL = "https://$($fqdn):7281"
 $JoinInfrastructure = "True"
@@ -152,18 +157,31 @@ if (-not (Test-Path $regPath)) {
 }
 
 # Set registry values
+Write-Host "Setting registry value: CertificateThumbprint = $Thumbprint"
 Set-ItemProperty -Path $regPath -Name "CertificateThumbprint" -Value "$Thumbprint" -Type String
-Set-ItemProperty -Path $regPath -Name "ConnectionString" -Value "$ConnectionString" -Type String
+Write-Host "Setting registry value: ClientURL = $ClientURL"
 Set-ItemProperty -Path $regPath -Name "ClientURL" -Value "$ClientURL" -Type String
+Write-Host "Setting registry value: JoinInfrastructure = $JoinInfrastructure"
 Set-ItemProperty -Path $regPath -Name "JoinInfrastructure" -Value "$JoinInfrastructure" -Type String
+Write-Host "Setting registry value: StifleRServerApiUrl = $StifleRServerApiUrl"
 Set-ItemProperty -Path $regPath -Name "StifleRServerApiUrl" -Value "$StifleRServerApiUrl" -Type String
-Set-ItemProperty -Path $regPath -Name "BypassAuthentication" -Value "True" -Type String
-Set-ItemProperty -Path $regPath -Name "BypassLocalAuthentication" -Value "True" -Type String
-Set-ItemProperty -Path $regPath -Name "ClientPasscode" -Value "P@ssword" -Type String
-Set-ItemProperty -Path $regPath -Name "SqlConnectionBy" -Value "ServerInstanceAndDB" -Type String
+Write-Host "Setting registry value: BypassAuthentication = $BypassAuthentication"
+Set-ItemProperty -Path $regPath -Name "BypassAuthentication" -Value "$BypassAuthentication" -Type String
+Write-Host "Setting registry value: BypassLocalAuthentication = $BypassLocalAuthentication"
+Set-ItemProperty -Path $regPath -Name "BypassLocalAuthentication" -Value "$BypassLocalAuthentication" -Type String
+Write-Host "Setting registry value: ClientPasscode = $ClientPasscode"
+Set-ItemProperty -Path $regPath -Name "ClientPasscode" -Value "$ClientPasscode" -Type String
+Write-Host "Setting registry value: SqlConnectionBy = $SqlConnectionBy"
+Set-ItemProperty -Path $regPath -Name "SqlConnectionBy" -Value "$SqlConnectionBy" -Type String
+
+if ($SqlConnectionBy -eq "ServerInstanceAndDB") {
+    Write-Host "Setting registry value: ConnectionString = $ConnectionString"
+    Set-ItemProperty -Path $regPath -Name "ConnectionString" -Value "$ConnectionString" -Type String
+}
 
 # Set optional registry values
 if ($ContentLocation) {
+    Write-Host "Setting registry value: ContentLocation = $ContentLocation"
     Set-ItemProperty -Path $regPath -Name "ContentLocation" -Value "$ContentLocation" -Type String
 }
 
