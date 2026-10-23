@@ -14,6 +14,7 @@
     Version history:
     25.07.19: Initial release
     26.09.25: Updated the logic to verify the WinPE add-on installation using the name in the uninstall registry key. Updated references to 10.1.26100.xxxx.
+    26.10.23: Updated line 137 to reference 10.1.26100.xxxx.
 #>
 
 # Configuration
