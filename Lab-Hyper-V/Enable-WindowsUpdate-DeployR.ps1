@@ -12,12 +12,13 @@
 
 .NOTES
     Author: Mike Terrill/2Pint Software
-    Date: September 19, 2026
-    Version: 26.11.06
+    Date: November 7, 2026
+    Version: 26.11.07
 
     Version history:
     26.09.19: Initial release
     26.11.06: Set 'SetDisableUXWUAccess' to 0 instead of removing it to prevent WU from showing as disabled in Settings.
+    26.11.07: Added Set-RegValue function.
 
     Run elevated. Safe to re-run.
     Default start types (current Windows 10/11):
@@ -45,7 +46,20 @@ function Write-Log {
     Write-Host $line
     try { Add-Content -Path $LogPath -Value $line -Encoding UTF8 } catch { }
 }
-
+function Set-RegValue {
+    param(
+        [string]$Path,
+        [string]$Name,
+        [ValidateSet('DWord','String')][string]$Type,
+        $Value
+    )
+    if (-not (Test-Path $Path)) {
+        New-Item -Path $Path -Force | Out-Null
+        Write-Log "Created key $Path"
+    }
+    New-ItemProperty -Path $Path -Name $Name -PropertyType $Type -Value $Value -Force | Out-Null
+    Write-Log "Set $Path\$Name = $Value ($Type)"
+}
 function Remove-RegValue {
     param([string]$Path, [string]$Name)
     if (Test-Path $Path) {
