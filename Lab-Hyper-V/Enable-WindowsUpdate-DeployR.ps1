@@ -13,10 +13,11 @@
 .NOTES
     Author: Mike Terrill/2Pint Software
     Date: September 19, 2026
-    Version: 26.09.19
+    Version: 26.11.06
 
     Version history:
     26.09.19: Initial release
+    26.11.06: Set 'SetDisableUXWUAccess' to 0 instead of removing it to prevent WU from showing as disabled in Settings.
 
     Run elevated. Safe to re-run.
     Default start types (current Windows 10/11):
@@ -89,7 +90,7 @@ Write-Log '======= Enable Windows Update (DeployR) ======='
 Remove-RegValue -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'DoNotConnectToWindowsUpdateInternetLocations'
 Remove-RegValue -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'DisableDualScan'
 Remove-RegValue -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'ExcludeWUDriversInQualityUpdate'
-Remove-RegValue -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'SetDisableUXWUAccess'
+Set-RegValue -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate' -Name 'SetDisableUXWUAccess' -Type DWord -Value 0 -Force
 Remove-RegValue -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'NoAutoUpdate'
 Remove-RegValue -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU' -Name 'AUOptions'
 Remove-RegValue -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent' -Name 'DisableWindowsConsumerFeatures'
